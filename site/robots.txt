@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:/admin/*
+Disallow: /clients/desktop.html
+Disallow: /clients/mobile.html
