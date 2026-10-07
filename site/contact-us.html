@@ -723,6 +723,9 @@ back to top -->
 
 </script>
     <script src="website/js/overhaul.js" defer></script>
+<script>
+(()=>{let saved;try{saved=sessionStorage.getItem('akhHomepageEnquiry');if(!saved)return;sessionStorage.removeItem('akhHomepageEnquiry');saved=JSON.parse(saved)}catch(_){try{sessionStorage.removeItem('akhHomepageEnquiry')}catch(__){}return}const form=document.getElementById('contactform');if(!form)return;const email=form.querySelector('[name="email"]');const message=form.querySelector('[name="message"]');if(email&&saved.email)email.value=saved.email;const parts=[];if(saved.service)parts.push('Service of interest: '+saved.service);if(saved.brief)parts.push('Project brief: '+saved.brief);if(message&&parts.length){message.value=[message.value.trim(),parts.join('\n\n')].filter(Boolean).join('\n\n');message.dispatchEvent(new Event('input',{bubbles:true}))}try{sessionStorage.removeItem('akhHomepageEnquiry')}catch(_){} })();
+</script>
 </body>
 
 </html>
