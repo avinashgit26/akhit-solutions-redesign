@@ -1,33 +1,36 @@
 (() => {
-  const root = document.documentElement;
-  const themeButton = document.getElementById('theme-toggle');
-  const themeMeta = document.querySelector('meta[name="theme-color"]');
-  const themeKey = 'akhHomepageTheme';
-  const icons = {
-    moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.5A8.5 8.5 0 0 1 8.5 3.8 8.7 8.7 0 1 0 20.2 15.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-    sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
+  const proofValues = [...document.querySelectorAll('.proof-value[data-count]')];
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const setProofValue = (element, value) => {
+    const decimals = Number(element.dataset.decimals || 0);
+    element.textContent = `${element.dataset.prefix || ''}${value.toFixed(decimals)}${element.dataset.suffix || ''}`;
   };
-
-  const applyTheme = theme => {
-    const dark = theme === 'dark';
-    root.dataset.theme = dark ? 'dark' : 'light';
-    if (themeMeta) themeMeta.content = dark ? '#111a20' : '#f8f6f1';
-    if (themeButton) {
-      themeButton.setAttribute('aria-pressed', String(dark));
-      themeButton.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
-      themeButton.title = dark ? 'Switch to light theme' : 'Switch to dark theme';
-      themeButton.innerHTML = `${dark ? icons.sun : icons.moon}<span>${dark ? 'Light mode' : 'Dark mode'}</span>`;
-    }
+  const animateProofValue = element => {
+    const target = Number(element.dataset.count);
+    if (!Number.isFinite(target)) return;
+    if (reducedMotion) { setProofValue(element, target); return; }
+    const start = performance.now();
+    const duration = 1500;
+    const tick = now => {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setProofValue(element, target * eased);
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   };
-
-  let savedTheme = 'light';
-  try { savedTheme = localStorage.getItem(themeKey) || 'light'; } catch (_) {}
-  applyTheme(savedTheme);
-  themeButton?.addEventListener('click', () => {
-    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-    applyTheme(next);
-    try { localStorage.setItem(themeKey, next); } catch (_) {}
-  });
+  if ('IntersectionObserver' in window) {
+    const proofObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        proofObserver.unobserve(entry.target);
+        animateProofValue(entry.target);
+      });
+    }, { threshold: .45 });
+    proofValues.forEach(value => proofObserver.observe(value));
+  } else {
+    proofValues.forEach(animateProofValue);
+  }
 
   const launcher = document.getElementById('assistant-launcher');
   const panel = document.getElementById('assistant-panel');
